@@ -9,14 +9,14 @@ import wget
 import socket
 from os import path
 
-# 解析网站下载页面链接的正则表达式
 
 class Storytelling:
     def __init__(self, app_id, app_secret):
         self.__download_page_regex__ = re.compile(r"<a href=\"(http://www\.5ips\.net/down[\w\W]+?)\">[\w\W]*?</a>")
-
-        base_url = 'https://route.showapi.com/632-1?showapi_appid=' + app_id + '&showapi_timestamp='+ time.strftime('%Y%m%d%H%M%S')
-        api_url = base_url +'&showapi_sign=' + app_secret
+        # 查询ip的地址，具体使用可以参考https://www.showapi.com/api/lookPoint/632的说明
+        base_url = 'https://route.showapi.com/632-1?showapi_appid=' + app_id + '&showapi_timestamp=' + time.strftime(
+            '%Y%m%d%H%M%S')
+        api_url = base_url + '&showapi_sign=' + app_secret
         try_time = 3
         timeout = 5
         html_doc = None
@@ -28,10 +28,9 @@ class Storytelling:
                 response = urllib2.urlopen(api_url, timeout=timeout)
                 html_doc = response.read()
                 break
-            except urllib2.URLError, e:
+            except urllib2.URLError:
                 try_time -= 1
                 html_doc = None
-        # print(html_doc)
 
         if html_doc is None:
             print("please check your network")
@@ -56,7 +55,7 @@ class Storytelling:
                 response = urllib2.urlopen(root_page, timeout=timeout)
                 html_doc = response.read()
                 break
-            except urllib2.URLError, e:
+            except urllib2.URLError:
                 html_doc = None
                 try_time -= 1
                 # print(e)
@@ -74,6 +73,7 @@ class Storytelling:
         :param timeout:
         :return:
         """
+        down_url = None
         while True:
             if try_time <= 0:
                 break
@@ -81,9 +81,9 @@ class Storytelling:
                 response = urllib2.urlopen(download_page_url, timeout=timeout)
                 html_doc = response.read()
                 # 获取下载地址的三个部分的url
-                url0 = re.search(r"url\[0\]= \"([\d\D]+?)\";", html_doc)    # 电信的url开头
-                url1 = re.search(r"url\[1\]= \"([\d\D]+?)\";", html_doc)    # 联通的url开头
-                url2 = re.search(r"url\[2\]= \"([\d\D]+?)\";", html_doc)    # 资源的子目录
+                url0 = re.search(r"url\[0\]= \"([\d\D]+?)\";", html_doc)  # 电信的url开头
+                url1 = re.search(r"url\[1\]= \"([\d\D]+?)\";", html_doc)  # 联通的url开头
+                url2 = re.search(r"url\[2\]= \"([\d\D]+?)\";", html_doc)  # 资源的子目录
                 if self.isp == u"电信":
                     down_url = url0.group(1) + url2.group(1)
                 elif self.isp == u"联通":
@@ -91,7 +91,7 @@ class Storytelling:
                 else:
                     down_url = url0.group(1) + url2.group(1)
                 break
-            except urllib2.URLError, e:
+            except urllib2.URLError:
                 try_time -= 1
                 down_url = None
 
@@ -99,6 +99,15 @@ class Storytelling:
 
     @staticmethod
     def download_file(url, save_path, file_name=None, try_time=3, timeout=60):
+        """
+        使用wget模块进行数据的下载
+        :param url:
+        :param save_path:
+        :param file_name:
+        :param try_time:
+        :param timeout:
+        :return:
+        """
         print(save_path)
         print(file_name)
         print(url)
